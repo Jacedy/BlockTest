@@ -46,4 +46,19 @@
     [testBlock4 release];
 }
 
+
+void exampleB_addBlockToArray(NSMutableArray *array) {
+    char b = 'B';
+    [array addObject:[^{
+        printf("%c\n", b);
+    } copy]];
+}
+
+- (void)exampleB {
+    NSMutableArray *array = [NSMutableArray array];
+    exampleB_addBlockToArray(array);
+    void (^block)() = [array objectAtIndex:0];
+    block();
+}
+
 @end

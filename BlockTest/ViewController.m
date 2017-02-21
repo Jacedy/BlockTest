@@ -22,6 +22,9 @@ void (^outFuncBlock)(void) = ^{
 - (void)viewDidLoad {
     [super viewDidLoad];
     
+    NSString *str3 = @"1234";
+    NSLog(@"block is %@", ^{NSLog(@":%@", str3);});     // __NSStackBlock__
+    
 #pragma mark - 当全局block引用了外部变量，ARC机制优化会将Global的block,转为Malloc（堆）的block进行调用。
     
     __block int age = 20;
@@ -36,6 +39,7 @@ void (^outFuncBlock)(void) = ^{
     // MRC下
     Test *test = [[Test alloc] init];
     [test test];
+    [test exampleB];
     
     /**总结：
      ARC下：(++age):21   (*ptr):20    // blockSave在堆中，*ptr在栈中
@@ -110,18 +114,25 @@ void (^outFuncBlock)(void) = ^{
     
     /*block里面使用self会造成循环引用吗？
      
-     很显然答案不都是，有些情况下是可以直接使用self的，比如调用系统的方法：
+     1.很显然答案不都是，有些情况下是可以直接使用self的，比如调用系统的方法：
      [UIView animateWithDuration:0.5 animations:^{
         NSLog(@"%@", self);
      }];
      因为这个block存在于静态方法中，虽然block对self强引用着，但是self却不持有这个静态方法，所以完全可以在block内部使用self。
      
-     还有一种情况：
-     当block不是self的属性时，self并不持有这个block，所以也不存在循环引用
+     2.当block不是self的属性时，self并不持有这个block，所以也不存在循环引用
      void(^block)(void) = ^() {
         NSLog(@"%@", self);
      };
      block();
+     
+     3.大部分GCD方法:
+     dispatch_async(dispatch_get_main_queue(), ^{
+        [self doSomething];
+     });
+     因为self并没有对GCD的block进行持有，没有形成循环引用。
+     
+     4.
      
      只要我们抓住循环引用的本质，就不难理解这些东西。
      */
