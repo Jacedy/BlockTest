@@ -20,7 +20,13 @@
         NSLog(@"(++age):%d", ++age);
     };
     textBlock();
-    NSLog(@"Test: textBlock:%@, (*ptr):%d", textBlock, *ptr);
+    
+    // 对block进行retain、release、copy，retainCount都不会变化，都为1
+//    [textBlock retain];
+//    [textBlock copy];
+//    [textBlock release];
+    
+    NSLog(@"Test: textBlock:%@, (*ptr):%d, %lu", textBlock, *ptr, (unsigned long)[textBlock retainCount]);
     /**
      MRC下：(++age):21   (*ptr):21
      */

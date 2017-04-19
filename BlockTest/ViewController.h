@@ -10,9 +10,5 @@
 
 @interface ViewController : UIViewController
 
-// 属性声明的block都是全局的__NSGlobalBlock__
-@property (nonatomic, copy) void (^copyBlock)();
-@property (nonatomic, weak) void (^weakBlock)();
-
 @end
 

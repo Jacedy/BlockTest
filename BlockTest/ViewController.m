@@ -17,10 +17,20 @@ void (^outFuncBlock)(void) = ^{
     NSLog(@"someBlock");
 };
 
+@interface ViewController ()
+
+// 属性声明的block都是全局的__NSGlobalBlock__
+@property (nonatomic, copy) void (^copyBlock)();
+@property (nonatomic, weak) void (^weakBlock)();
+
+@end
+
 @implementation ViewController
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    
+    NSLog(@"block : %@", ^{NSLog(@"block");});      // __NSGlobalBlock__
     
     NSString *str3 = @"1234";
     NSLog(@"block is %@", ^{NSLog(@":%@", str3);});     // __NSStackBlock__
@@ -45,27 +55,28 @@ void (^outFuncBlock)(void) = ^{
      ARC下：(++age):21   (*ptr):20    // blockSave在堆中，*ptr在栈中
      MRC下：(++age):21   (*ptr):21    // blockSave和*ptr都在栈中
      */
+
+    
+#pragma mark - copyBlock（未使用函数内变量） __NSGlobalBlock__
+    
+    self.copyBlock = ^{
+        
+    };
+    NSLog(@"1：%@", self.copyBlock);
+    
+#pragma mark - weakBlock（未使用函数内变量） __NSGlobalBlock__
+    
+    self.weakBlock = ^{
+        
+    };
+    NSLog(@"2：%@", self.weakBlock);
     
 #pragma mark - copyBlock （使用函数内变量） __NSMallocBlock__
     
     self.copyBlock = ^{
         age = age+1-1;
     };
-    NSLog(@"1：%@", self.copyBlock);
-    
-#pragma mark - copyBlock（未使用函数内变量）
-    
-    self.copyBlock = ^{
-        
-    };
-    NSLog(@"2：%@", self.copyBlock);
-    
-#pragma mark - weakBlock（未使用函数内变量）
-    
-    self.weakBlock = ^{
-        
-    };
-    NSLog(@"3：%@", self.weakBlock);
+    NSLog(@"3：%@", self.copyBlock);
     
 #pragma mark - weakBlock（使用函数内变量） __NSStackBlock__
     
@@ -74,16 +85,18 @@ void (^outFuncBlock)(void) = ^{
     };
     NSLog(@"4：%@", self.weakBlock);
     
-#pragma mark - someBlock（定义在函数体外）
+#pragma mark - someBlock（定义在函数体外） __NSGlobalBlock__
     
     NSLog(@"5：%@", outFuncBlock);
     
-#pragma mark - typedefBlock（函数体外自定义的Block）
+#pragma mark - typedefBlock（函数体外自定义的Block） __NSGlobalBlock__
     
     typedefBlock b = ^{
         
     };
     NSLog(@"6：%@", b);
+    
+    
     
 #pragma mark - 对栈中的block进行copy
     // 不引用外部变量，定义在全局区、表达式没有使用到外部变量时，生成的block都是__NSGlobalBlock__类型
@@ -104,7 +117,7 @@ void (^outFuncBlock)(void) = ^{
     
     /*那么什么时候栈上的Block会复制到堆上呢？
      1.调用Block的copy实例方法时
-     2.Block作为函数返回值返回时
+     2.Block作为函数返回值返回时（作为参数则不会）
      3.将Block赋值给附有__strong修饰符id类型的类或Block类型成员变量时
      4.将方法名中含有usingBlock的Cocoa框架方法或GCD的API中传递Block时
      
@@ -132,7 +145,7 @@ void (^outFuncBlock)(void) = ^{
      });
      因为self并没有对GCD的block进行持有，没有形成循环引用。
      
-     4.
+     4.……
      
      只要我们抓住循环引用的本质，就不难理解这些东西。
      */
